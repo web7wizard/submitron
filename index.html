@@ -1,0 +1,1853 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Student Project Portal</title>
+  <!-- Font Awesome for social icons -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <script src="https://cdn.jsdelivr.net/npm/appwrite@13.0.0"></script>
+
+  <style>
+    /* START: Global Resets and Responsive Foundation */
+    * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+    }
+    html, body {
+        overflow-x: hidden; /* Prevent horizontal scrolling */
+    }
+    body {
+       font-family: 'Georgia', serif;
+      background: #ffffff;
+      color: #333;
+      display: flex;
+      flex-direction: column;
+      min-height: 100vh;
+      position: relative;
+    }
+    /* END: Global Resets */
+    
+    .landing {
+      position: relative;
+      z-index: 1;
+      min-height: 100vh; /* Use min-height to ensure it fills screen */
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      text-align: center;
+      color: #000;
+      padding: 20px;
+    }
+    .overlay-content {
+      background: none;
+      padding: 0;
+      max-width: 700px;
+      width: 100%;
+    }
+    .overlay-content h1 {
+      font-size: clamp(2.5rem, 8vw, 5rem); /* Responsive font size */
+      font-weight: 700;
+      color: #111;
+      letter-spacing: -2px;
+      margin-bottom: 20px;
+      line-height: 1.1;
+      text-transform: capitalize;
+    }
+    .overlay-content p {
+      font-size: clamp(1rem, 4vw, 1.2rem);
+      color: #555;
+      line-height: 1.6;
+      max-width: 600px;
+      margin: 0 auto;
+    }
+    .enter-btn {
+      position: absolute;
+      top: 30px;
+      right: 30px;
+      padding: 12px 26px;
+      background: #111;
+      color: white;
+      font-weight: 500;
+      border: none;
+      border-radius: 0;
+      font-size: 1rem;
+      letter-spacing: 0.5px;
+      cursor: pointer;
+      transition: background-color 0.3s ease;
+      z-index: 10;
+    }
+    .enter-btn:hover {
+      background: #333;
+    }
+
+    #teacherBtn {
+      left: 30px;
+      right: auto;
+      top: 30px;
+      width: 50px;
+      height: 50px;
+      padding: 0;
+      border-radius: 50%;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+    }
+    #teacherBtn i {
+      font-size: 1.4rem;
+      color: #fff;
+    }
+
+    #authSection, #appSection {
+      display: none;
+    }
+    .auth-section {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      min-height: 100vh;
+      background: #f4f4f4;
+      padding: 20px;
+    }
+    .auth-box {
+      position: relative;
+      background: #ffffff;
+      padding: 50px 60px;
+      border-radius: 0;
+      max-width: 420px;
+      width: 100%;
+      border: 1px solid #ddd;
+      box-shadow: 0 8px 20px rgba(0, 0, 0, 0.05);
+      text-align: left;
+    }
+    .auth-box h2 {
+      color: #111;
+      font-size: 2rem;
+      margin-bottom: 20px;
+    }
+    .auth-box input, .auth-box button:not(.close-btn) {
+      width: 100%;
+      padding: 12px 14px;
+      margin: 10px 0;
+      font-size: 1rem;
+      border-radius: 0;
+      border: 1px solid #ccc;
+    }
+    .auth-box input {
+      background: #f9f9f9;
+      color: #333;
+    }
+    .auth-box input:focus {
+      outline: none;
+      border-color: #111;
+    }
+    .auth-box button:not(.close-btn) {
+      background: #111;
+      color: white;
+      border: none;
+      font-weight: 600;
+      text-transform: uppercase;
+    }
+    .auth-box button:hover {
+      background: #333;
+    }
+    .auth-box a {
+      color: #111;
+      text-decoration: none;
+    }
+    .auth-box a:hover {
+      text-decoration: underline;
+    }
+    input.error {
+      border: 2px solid #e74c3c !important;
+      background: #fae6e6 !important;
+    }
+    .top-bar {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      background: #ffffff;
+      border-bottom: 1px solid #ddd;
+      padding: 16px 20px;
+    }
+    .top-bar h2 {
+      margin: 0;
+      color: #111;
+      font-weight: 500;
+      font-size: 1.6rem;
+      word-break: break-all;
+    }
+    .logout-btn {
+      background: #111;
+      border: none;
+      padding: 10px 18px;
+      color: white;
+      font-weight: 500;
+      cursor: pointer;
+      border-radius: 0;
+      flex-shrink: 0; /* Prevents button from shrinking */
+    }
+    .logout-btn:hover {
+      background: #333;
+    }
+    .dashboard {
+      padding: clamp(20px, 5vw, 40px) clamp(20px, 5vw, 60px);
+      max-width: 1200px;
+      margin: 0 auto; /* Center dashboard on large screens */
+      width: 100%;
+      background: #ffffff;
+      font-size: 1.1rem;
+    }
+    .actions {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 20px;
+      margin-bottom: 30px;
+      justify-content: space-between;
+      align-items: center;
+    }
+    .upload-label {
+      background: #111;
+      color: white;
+      padding: 14px 24px;
+      font-weight: bold;
+      font-size: 0.95rem;
+      border-radius: 0;
+      cursor: pointer;
+      border: none;
+    }
+    .search-bar {
+      flex-grow: 1;
+      min-width: 200px; /* Prevent search bar from getting too small */
+    }
+    .search-bar input {
+      width: 100%;
+      padding: 14px;
+      border: 1px solid #ccc;
+      background: #f9f9f9;
+      color: #333;
+      border-radius: 0;
+      font-size: 1rem;
+    }
+    .gallery {
+      display: grid;
+      gap: 24px;
+      grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+    }
+    .card {
+      background: #fff;
+      border: 1px solid #ddd;
+      border-radius: 0;
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+      transition: box-shadow 0.3s ease;
+    }
+    .card:hover {
+      box-shadow: 0 10px 20px rgba(0, 0, 0, 0.06);
+    }
+    .card img {
+      width: 100%;
+      height: 160px;
+      object-fit: cover;
+      transition: transform 0.3s ease;
+    }
+    .card:hover img {
+      transform: scale(1.05);
+    }
+    .card .info {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 12px 14px;
+    }
+    .card .info p {
+      margin: 0;
+      font-size: 0.95rem;
+      color: #333;
+      flex-grow: 1;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    .card button {
+      background: none;
+      border: 1px solid #111;
+      color: #111;
+      font-size: 0.8rem;
+      padding: 6px 10px;
+      cursor: pointer;
+      border-radius: 0;
+    }
+    .card button:hover {
+      background: #111;
+      color: white;
+    }
+    #uploadStatus {
+      font-style: italic;
+      color: #888;
+      margin-top: 10px;
+    }
+    #deleteModal {
+      display: none;
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(0,0,0,0.7);
+      z-index: 9999;
+      justify-content: center;
+      align-items: center;
+    }
+    #deleteModal div {
+      background: #fff;
+      padding: 30px;
+      border-radius: 0;
+      text-align: center;
+      color: #111;
+      max-width: 360px;
+    }
+    #deleteModal button {
+      padding: 10px 20px;
+      border: none;
+      font-weight: 600;
+      cursor: pointer;
+    }
+    #deleteModal button:last-child {
+      background: #e74c3c;
+      color: white;
+    }
+    #deleteModal button:hover {
+      opacity: 0.9;
+    }
+    #appSection {
+      opacity: 0;
+      animation: fadeInContent 1s forwards;
+      animation-delay: 0.3s;
+      flex-grow: 1;
+      display: flex;
+      flex-direction: column;
+    }
+    @keyframes fadeInContent {
+      to {
+        opacity: 1;
+      }
+    }
+    .splash-screen {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: #ffffff;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      flex-direction: column;
+      z-index: 99999;
+      transition: opacity 1s ease-out;
+    }
+    .splash-content {
+      text-align: center;
+      color: #111;
+      animation: fadeIn 2s ease-in-out;
+      width: 100%;
+      max-width: 600px;
+    }
+    .splash-content iframe {
+      width: 100%;
+      height: 50vh;
+      max-height: 400px;
+    }
+    .splash-content h1 {
+      font-size: 2.8rem;
+      margin-bottom: 12px;
+    }
+    .splash-content p {
+      font-size: 1.1rem;
+      color: #444;
+    }
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(20px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+    /* FIXED: Background animation container */
+    .spline-bg {
+      position: fixed; /* Changed from absolute */
+      top: 0;
+      left: 0;
+      width: 100vw;
+      height: 100vh;
+      z-index: -1;
+      overflow: hidden;
+    }
+    spline-viewer {
+      width: 100%;
+      height: 100%;
+      pointer-events: none;
+    }
+
+    .modal-overlay {
+      display: none;
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(0, 0, 0, 0.6);
+      z-index: 1000;
+      justify-content: center;
+      align-items: center;
+      padding: 20px;
+    }
+    .modal-content {
+      position: relative;
+      background: #ffffff;
+      padding: 40px;
+      border-radius: 5px;
+      max-width: 450px;
+      width: 100%;
+      box-shadow: 0 5px 15px rgba(0,0,0,0.3);
+      text-align: center;
+    }
+    .modal-content h2 {
+      margin-top: 0;
+      color: #111;
+      font-size: 1.8rem;
+    }
+    .modal-content p {
+      color: #666;
+      margin-bottom: 25px;
+    }
+    .modal-form input {
+      width: 100%;
+      padding: 12px;
+      margin-bottom: 15px;
+      border: 1px solid #ccc;
+      border-radius: 4px;
+    }
+    .modal-form button {
+      width: 100%;
+      padding: 12px;
+      background: #111;
+      color: white;
+      border: none;
+      border-radius: 4px;
+      font-size: 1rem;
+      font-weight: bold;
+      cursor: pointer;
+      transition: background-color 0.3s;
+    }
+    .modal-form button:hover {
+      background-color: #333;
+    }
+    .modal-error {
+      color: #e74c3c;
+      font-size: 0.9em;
+      margin-bottom: 10px;
+      min-height: 1.2em;
+    }
+    .close-btn {
+      position: absolute;
+      top: 10px;
+      right: 15px;
+      background: none;
+      border: none;
+      font-size: 2rem;
+      color: #999;
+      cursor: pointer;
+      padding: 0;
+      line-height: 1;
+    }
+    .close-btn:hover {
+        color: #333;
+    }
+
+    .task-group {
+      background-color: #f9fafb;
+      border: 1px solid #e5e7eb;
+      border-radius: 8px;
+      padding: 1.5rem;
+      margin-bottom: 2rem;
+    }
+    .task-group h3 {
+        font-family: 'Georgia', serif;
+        font-size: 1.7rem;
+        color: #10aa93;
+        margin-top: 0;
+        padding-bottom: 1rem;
+        border-bottom: 1px solid #d1d5db;
+    }
+    #task-assign-area {
+        margin-bottom: 2rem;
+        padding: 1.5rem;
+        border: 1px solid #ddd;
+        border-radius: 8px;
+    }
+
+    .dashboard > h3, #task-assign-area h3, #student-task-area h3, #submission-header {
+        margin-top: 0;
+        font-size: 1.8rem;
+    }
+    #task-assign-area input, #task-assign-area textarea, #task-assign-area button {
+        width: 100%;
+        padding: 12px;
+        margin: 8px 0;
+        border: 1px solid #ccc;
+        border-radius: 4px;
+        font-size: 1rem;
+    }
+    #task-assign-area button {
+        background: #111; color: #fff; border: none; cursor: pointer;
+    }
+
+    #student-task-area p {
+      font-size: 1.1rem;
+      line-height: 1.6;
+    }
+     .submission-card {
+        position: relative;
+        background: #fff;
+        padding: 1.2rem;
+        border-radius: 8px;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        display: flex;
+        flex-direction: column;
+        gap: 0.5rem;
+    }
+     .submission-card h4 {
+        margin: 0;
+        font-size: 1.2rem;
+        color: #333;
+        word-wrap: break-word;
+    }
+    .submission-card p {
+        margin: 0;
+        font-size: 1rem;
+        color: #555;
+    }
+    /* Styles for the remark section */
+    .remark-section {
+        border-top: 1px solid #eee;
+        padding-top: 10px;
+        margin-top: 10px;
+    }
+    .remark-section textarea {
+        width: 100%;
+        padding: 8px;
+        font-size: 0.95rem;
+        border: 1px solid #ccc;
+        border-radius: 4px;
+        resize: vertical;
+        min-height: 60px;
+        margin-top: 5px;
+    }
+    .remark-section button {
+        width: 100%;
+        padding: 8px;
+        font-size: 0.9rem;
+        background: #28a745;
+        color: white;
+        border: none;
+        border-radius: 4px;
+        cursor: pointer;
+        margin-top: 5px;
+    }
+    .remark-section button:hover {
+        background: #218838;
+    }
+    .remark-display {
+        background-color: #e9f5ff;
+        border-left: 4px solid #007bff;
+        padding: 10px;
+        margin-top: 10px;
+        font-style: italic;
+    }
+    .download-btn, .delete-btn, .secondary-btn {
+        display: inline-block;
+        margin-top: 10px;
+        padding: 8px 12px;
+        color: white;
+        text-decoration: none;
+        border-radius: 5px;
+        font-size: 0.9rem;
+        text-align: center;
+        border: none;
+        cursor: pointer;
+    }
+    .download-btn { background: #007bff; }
+    .delete-btn { background: #e53e3e; }
+    .secondary-btn { background: #6c757d; width: auto; }
+
+    .rank-badge {
+        position: absolute;
+        top: 10px;
+        right: 10px;
+        background-color: #007bff;
+        color: white;
+        width: 32px;
+        height: 32px;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-weight: bold;
+        font-size: 1rem;
+        box-shadow: 0 1px 3px rgba(0,0,0,0.2);
+    }
+    .modal {
+        display: none;
+        position: fixed;
+        z-index: 1000;
+        left: 0;
+        top: 0;
+        width: 100%;
+        height: 100%;
+        background-color: rgba(0,0,0,0.6);
+        align-items: center;
+        justify-content: center;
+    }
+    
+    #ranking-list {
+        list-style: none;
+        max-height: 400px;
+        overflow-y: auto;
+    }
+    #ranking-list li {
+        display: flex;
+        justify-content: space-between;
+        padding: 12px 8px;
+        border-bottom: 1px solid #eee;
+    }
+    #ranking-list li .rank {
+        font-weight: bold;
+        color: #007bff;
+        flex-basis: 15%;
+    }
+
+    #ranking-list li .email {
+        color: #333;
+        flex-basis: 85%;
+        word-break: break-all;
+    }
+
+    .overlay-content iframe { /* Target landing page iframe */
+        width: 100%;
+        height: 50vh;
+        max-height: 350px;
+        margin-top: 20px;
+    }
+
+  /* START: ENHANCED Styles for About and Contact Sections */
+  .page-section {
+      padding: 100px 40px;
+      text-align: center;
+      border-top: 1px solid #e9ecef;
+      background-color: #f8f9fa;
+      max-width: 100%; /* Ensure section can be full-width */
+  }
+  .page-section-content {
+      max-width: 1200px; /* Center content within the section */
+      margin: 0 auto;
+  }
+
+  #contact {
+    background-color: #ffffff;
+  }
+  .page-section h2 {
+      font-size: 2.8rem;
+      color: #111;
+      margin-bottom: 25px;
+      display: inline-block;
+      padding-bottom: 10px;
+      position: relative;
+      animation: fadeInUp 1s ease-out;
+  }
+  .page-section h2:after {
+    content: '';
+    position: absolute;
+    bottom: 0;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 60px;
+    height: 3px;
+    background-color: #000000;
+  }
+  .page-section .section-intro { /* Class for introductory paragraphs */
+      font-size: 1.2rem;
+      color: #555;
+      line-height: 1.7;
+      max-width: 800px;
+      margin: 0 auto 50px; /* Increased bottom margin */
+      animation: fadeInUp 1s ease-out 0.2s;
+      animation-fill-mode: both; /* Keeps styles of last keyframe */
+  }
+
+  /* About Us - Features Styling */
+  .features-container {
+    display: flex;
+    justify-content: center;
+    gap: 30px;
+    flex-wrap: wrap;
+    margin-top: 40px;
+  }
+  .feature-item {
+    background: #fff;
+    padding: 30px;
+    border-radius: 8px;
+    box-shadow: 0 4px 15px rgba(0,0,0,0.05);
+    width: 280px;
+    text-align: center;
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+    animation: fadeInUp 1s ease-out;
+  }
+  .feature-item:nth-child(1) { animation-delay: 0.3s; }
+  .feature-item:nth-child(2) { animation-delay: 0.5s; }
+  .feature-item:nth-child(3) { animation-delay: 0.7s; }
+
+  .feature-item:hover {
+    transform: translateY(-10px);
+    box-shadow: 0 10px 25px rgba(0,0,0,0.1);
+  }
+  .feature-item .fas {
+    font-size: 2.5rem;
+    color: #000000;
+    margin-bottom: 20px;
+  }
+  .feature-item h3 {
+    font-size: 1.4rem;
+    color: #333;
+    margin-bottom: 10px;
+  }
+  .feature-item p {
+    font-size: 1rem;
+    line-height: 1.6;
+    color: #666;
+  }
+
+  /* Contact Section Styling */
+  #contact p {
+    animation: fadeInUp 1s ease-out 0.2s;
+    animation-fill-mode: both;
+  }
+  #contact .social-icons {
+      margin-top: 30px;
+      animation: fadeInUp 1s ease-out 0.4s;
+      animation-fill-mode: both;
+  }
+  #contact .social-icons a {
+      color: #333;
+      font-size: 2rem;
+      margin: 0 15px;
+      transition: color 0.3s ease, transform 0.3s ease;
+  }
+  #contact .social-icons a:hover {
+      color: #000000;
+      transform: scale(1.1);
+  }
+  #contact .contact-email {
+    font-size: 1.2rem;
+  }
+  #contact .contact-email .fas {
+    margin-right: 10px;
+    color: #000000;
+  }
+
+  /* Animation Keyframes */
+  @keyframes fadeInUp {
+    from {
+        opacity: 0;
+        transform: translateY(40px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+  }
+  /* END: ENHANCED Styles for About and Contact Sections */
+
+  /* START: New Carousel Styles */
+  .carousel-container {
+    position: relative;
+    max-width: 1200px;
+    margin: 80px auto 0;
+    padding: 0 40px;
+  }
+  .carousel-wrapper {
+    display: flex;
+    gap: 20px;
+    overflow-x: auto;
+    scroll-snap-type: x mandatory;
+    scroll-behavior: smooth;
+    padding-bottom: 20px;
+    scrollbar-width: none;
+  }
+  .carousel-wrapper::-webkit-scrollbar {
+    display: none;
+  }
+  .carousel-card {
+    flex: 0 0 320px;
+    background: #fff;
+    border-radius: 8px;
+    overflow: hidden;
+    box-shadow: 0 4px 15px rgba(0,0,0,0.08);
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+    scroll-snap-align: start;
+    animation: fadeInUp 1s ease-out 0.8s;
+    animation-fill-mode: both;
+  }
+  .carousel-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 12px 28px rgba(0,0,0,0.12);
+  }
+  .carousel-card img {
+    width: 100%;
+    height: 180px;
+    object-fit: cover;
+  }
+  .carousel-card-info {
+    padding: 20px;
+    text-align: left;
+  }
+  .carousel-card-info h3 {
+    font-size: 1.3rem;
+    color: #333;
+    margin: 0 0 10px 0;
+  }
+  .carousel-card-info p {
+    font-size: 1rem;
+    line-height: 1.6;
+    color: #666;
+    margin: 0;
+  }
+  .carousel-btn {
+    position: absolute;
+    top: 50%;
+    transform: translateY(-50%);
+    background-color: rgba(255, 255, 255, 0.9);
+    border: 1px solid #ddd;
+    color: #333;
+    border-radius: 50%;
+    width: 45px;
+    height: 45px;
+    font-size: 1rem;
+    cursor: pointer;
+    z-index: 10;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+    transition: background-color 0.3s, transform 0.3s;
+  }
+  .carousel-btn:hover {
+    background-color: #fff;
+    transform: translateY(-50%) scale(1.1);
+  }
+  .prev-btn {
+    left: 0;
+  }
+  .next-btn {
+    right: 0;
+  }
+  /* END: New Carousel Styles */
+
+  /* START: Footer Styles */
+  .footer {
+    background-color: #111;
+    color: #aaa;
+    text-align: center;
+    padding: 25px 20px;
+    font-size: 0.9rem;
+    border-top: 1px solid #333;
+    width: 100%;
+    margin-top: auto;
+    position: relative;
+    z-index: 2; /* Ensure footer is above bg animation */
+  }
+  /* END: Footer Styles */
+
+  /* START: New Teacher and Student Dashboard Layout Styles */
+    .top-bar-actions {
+      display: flex;
+      align-items: center;
+      gap: 15px;
+    }
+    #teacher-controls-area .upload-label {
+        padding: 10px 18px;
+        font-size: 0.9rem;
+        font-weight: 500;
+        background-color: #007bff;
+        border-radius: 0;
+    }
+     #teacher-controls-area .upload-label:hover {
+        background-color: #0056b3;
+    }
+
+    .task-group > .gallery {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+        gap: 1.5rem;
+    }
+    #student-task-area {
+        background-color: #f9fafb;
+        border: 1px solid #e5e7eb;
+        border-radius: 8px;
+        padding: 1.5rem;
+        margin-bottom: 2rem;
+    }
+  /* END: New Layout Styles */
+
+    /* START: FINAL MOBILE RESPONSIVE STYLES */
+    @media (max-width: 992px) {
+        .task-group > .gallery {
+            grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+        }
+    }
+    
+    @media (max-width: 768px) {
+      .top-bar {
+        flex-wrap: wrap;
+        gap: 15px;
+      }
+      .page-section {
+          padding: 60px 20px;
+      }
+      .page-section h2 {
+          font-size: 2.2rem;
+      }
+      .features-container {
+          gap: 20px;
+      }
+      .feature-item {
+          width: 100%;
+      }
+      .carousel-container {
+          padding: 0 15px;
+      }
+      .carousel-btn {
+          display: none;
+      }
+      .carousel-card {
+        flex-basis: 80%;
+      }
+      .actions {
+          flex-direction: column;
+          align-items: stretch;
+          gap: 15px;
+      }
+      #submission-header {
+          font-size: 1.6rem;
+      }
+      #teacher-controls-area .upload-label {
+        width: 100%;
+        text-align: center;
+      }
+      .submission-card div[style*="display: flex"] {
+          flex-wrap: wrap;
+          gap: 8px;
+      }
+      .download-btn, .delete-btn, .secondary-btn {
+          flex-grow: 1;
+      }
+    }
+
+    @media (max-width: 576px) {
+        .enter-btn {
+            padding: 10px 20px;
+            font-size: 0.9rem;
+            top: 15px;
+            right: 15px;
+        }
+        #teacherBtn {
+            top: 15px;
+            left: 15px;
+            width: 45px;
+            height: 45px;
+        }
+        .task-group, #student-task-area {
+            padding: 1.2rem;
+        }
+        .auth-box, .modal-content {
+            padding: 25px 20px;
+        }
+        .auth-box h2, .modal-content h2 {
+            font-size: 1.5rem;
+        }
+    }
+    /* END: MOBILE RESPONSIVE STYLES */
+  </style>
+</head>
+<body>
+
+<!-- FIXED: Background animation is now in a fixed container -->
+<div class="spline-bg">
+    <spline-viewer url="https://prod.spline.design/iJQbkf8n8oxVe8bE/scene.splinecode"></spline-viewer>
+</div>
+
+<!-- Splash Screen -->
+<div id="splashScreen" class="splash-screen">
+  <div class="splash-content">
+    <iframe src='https://my.spline.design/greetingrobot-J559G0YaxZABKZGFZfiwEEg3/' frameborder='0' width='100%' height='100%'></iframe>
+    <h1>SUBMITRON</h1>
+    <p>Loading your academic workspace...</p>
+  </div>
+</div>
+
+<!-- Landing Page -->
+<div class="landing" id="landing" style="display: none;">
+  <button class="enter-btn" onclick="enterApp()">Sign In</button>
+  <button class="enter-btn" id="teacherBtn" onclick="teacherPrompt()" title="Teacher Access">
+      <i class="fa-solid fa-chalkboard-user"></i>
+  </button>
+
+ <div class="overlay-content">
+  <h1>Welcome To The SUBMITRON</h1>
+  <p>Students and teachers can securely upload, manage, and review project submissions powered by Appwrite.</p>
+  <!-- The iframe is now sized responsively within overlay-content -->
+  <iframe src='https://my.spline.design/nexbotrobotcharacterconcept-Ixqw1VF19cn05qMLw1dJHSXd/' frameborder='0'></iframe>
+</div>
+</div>
+
+<!-- START: About Us Section -->
+<section id="about" class="page-section" style="display: none;">
+  <div class="page-section-content">
+    <h2>About Us</h2>
+    <p class="section-intro">SUBMITRON is a modern, cloud-based platform designed to streamline the academic submission process. Our mission is to provide an intuitive and efficient workspace for both students and educators.</p>
+
+    <div class="features-container">
+      <div class="feature-item">
+        <i class="fas fa-rocket"></i>
+        <h3>Efficient Workflow</h3>
+        <p>Easily submit work, track progress, and see rankings with powerful tools for assigning and viewing tasks.</p>
+      </div>
+      <div class="feature-item">
+        <i class="fas fa-user-shield"></i>
+        <h3>Secure & Scalable</h3>
+        <p>Powered by the security and scalability of Appwrite, we ensure your data is safe and always available.</p>
+      </div>
+      <div class="feature-item">
+        <i class="fas fa-users"></i>
+        <h3>Built for Education</h3>
+        <p>An intuitive and modern workspace designed to revolutionize how academic projects are managed.</p>
+      </div>
+    </div>
+
+    <!-- START: New Carousel -->
+    <div class="carousel-container">
+      <h2>Features</h2>
+      <div class="carousel-wrapper" id="carouselWrapper">
+        <div class="carousel-card">
+          <img src="https://images.unsplash.com/photo-1517245386807-bb43f82c33c4?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3wzOTM4fDB8MXxzZWFyY2h8MTB8fHRlYWNoZXIlMjBhc3NpZ25tZW50fGVufDB8fHx8MTY5NjYxMDQzN3ww&ixlib=rb-4.0.3&q=80&w=400" alt="Task Assignment">
+          <div class="carousel-card-info">
+            <h3>Easy Task Assignment</h3>
+            <p>Teachers create and assign detailed tasks in a dedicated dashboard, setting clear expectations for students.</p>
+          </div>
+        </div>
+        <div class="carousel-card">
+          <img src="https://images.unsplash.com/photo-1524178232363-1fb2b075b655?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3wzOTM4fDB8MXxzZWFyY2h8Nnx8c3R1ZGVudCUyMGxhcHRvcHxlbnwwfHx8fDE2OTY2MTA0OTZ8MA&ixlib=rb-4.0.3&q=80&w=400" alt="Student Submissions">
+          <div class="carousel-card-info">
+            <h3>Seamless Submissions</h3>
+            <p>Students upload their files directly to the platform. Submissions are automatically ranked by time.</p>
+          </div>
+        </div>
+        <div class="carousel-card">
+          <img src="https://images.unsplash.com/photo-1517245386807-bb43f82c33c4?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3wzOTM4fDB8MXxzZWFyY2h8MTB8fHRlYWNoZXIlMjBhc3NpZ25tZW50fGVufDB8fHx8MTY5NjYxMDQzN3ww&ixlib=rb-4.0.3&q=80&w=400" alt="Task Assignment">
+          <div class="carousel-card-info">
+            <h3>Secure Cloud Storage</h3>
+            <p>All files are stored securely in the cloud using Appwrite, protecting the integrity of every submission.</p>
+          </div>
+        </div>
+        <div class="carousel-card">
+          <img src="https://images.unsplash.com/photo-1591696205602-2f950c417cb9?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3wzOTM4fDB8MXxzZWFyY2h8N3x8ZGFzaGJvYXJkfGVufDB8fHx8MTY5NjYxMDU3N3ww&ixlib=rb-4.0.3&q=80&w=400" alt="Centralized Dashboard">
+          <div class="carousel-card-info">
+            <h3>Centralized Dashboard</h3>
+            <p>Manage everything from one place. A clean, intuitive interface for both student and teacher roles.</p>
+          </div>
+        </div>
+        <div class="carousel-card">
+          <img src="https://images.unsplash.com/photo-1556740714-a8395b3bf30f?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3wzOTM4fDB8MXxzZWFyY2h8Mnx8bGVhZGVyYm9hcmR8ZW58MHx8fHwxNjk2NjEwNjEwfDA&ixlib=rb-4.0.3&q=80&w=400" alt="Real-time Ranking">
+          <div class="carousel-card-info">
+            <h3>Real-time Ranking</h3>
+            <p>View rankings for each task based on submission order, fostering a competitive and engaging environment.</p>
+          </div>
+        </div>
+      </div>
+      <button class="carousel-btn prev-btn" id="prevBtn"><i class="fas fa-chevron-left"></i></button>
+      <button class="carousel-btn next-btn" id="nextBtn"><i class="fas fa-chevron-right"></i></button>
+    </div>
+  </div>
+</section>
+
+<!-- START: Contact Section -->
+<section id="contact" class="page-section" style="display: none;">
+  <div class="page-section-content">
+    <h2>Contact</h2>
+    <p class="section-intro">Have questions or feedback? We'd love to hear from you. Reach out to us via email or connect with us on our social channels.</p>
+    <p class="contact-email">
+      <i class="fas fa-envelope"></i><strong>Email:</strong> <a href="mailto:support@submitron.com" style="color: #007bff; text-decoration: none;">support@submitron.com</a>
+    </p>
+    <div class="social-icons">
+      <a href="#" target="_blank"><i class="fab fa-twitter"></i></a>
+      <a href="#" target="_blank"><i class="fab fa-github"></i></a>
+      <a href="#" target="_blank"><i class="fab fa-linkedin-in"></i></a>
+    </div>
+  </div>
+</section>
+
+<!-- Auth Section -->
+<div class="auth-section" id="authSection">
+  <div class="auth-box">
+    <button class="close-btn" onclick="showLandingPage()">×</button>
+    <h2 id="authTitle">Login</h2>
+    <input type="email" id="email" placeholder="Email" />
+    <input type="password" id="password" placeholder="Password" />
+    <p id="authError" style="color:#ff5f5f; font-size:0.9em;"></p>
+    <button onclick="handleAuth()" id="authActionBtn">Login</button>
+    <p style="margin-top: 12px;">
+      <span id="togglePrompt">Don't have an account?</span>
+      <a href="#" onclick="toggleAuthMode()">Sign up</a>
+    </p>
+  </div>
+</div>
+
+<!-- App Section -->
+<div id="appSection">
+  <div class="top-bar">
+    <h2 id="userName">Dashboard</h2>
+    <div class="top-bar-actions">
+        <!-- "Assign Task" button for teachers -->
+        <div id="teacher-controls-area" style="display: none;">
+            <button onclick="openAssignTaskModal()" class="upload-label">
+                <i class="fas fa-pencil-alt" style="margin-right: 8px;"></i>Assign a New Task
+            </button>
+        </div>
+        <button class="logout-btn" onclick="logout()">Logout</button>
+    </div>
+  </div>
+  <div class="dashboard">
+
+    <!-- Area for student's latest task -->
+    <div id="student-task-area" style="display:none;">
+    </div>
+
+    <!-- Search bar and header -->
+    <div class="actions" id="search-container" style="display:none;">
+        <h3 id="submission-header">Submissions</h3>
+        <div class="search-bar">
+            <input type="text" id="searchInput" placeholder="Search submissions..." />
+        </div>
+    </div>
+
+    <!-- Gallery for all submissions -->
+    <div class="gallery" id="gallery"></div>
+  </div>
+</div>
+
+
+<!-- MODIFIED: Assign Task Modal -->
+<div id="assignTaskModal" class="modal-overlay">
+    <div class="modal-content">
+        <button class="close-btn" onclick="closeAssignTaskModal()">×</button>
+        <div id="task-assign-area" style="border: none; padding: 0;">
+            <h3 style="margin-top:0; font-size: 1.8rem; border: none; padding: 0;">Assign a New Task</h3>
+            <input type="text" id="task-title-input" placeholder="Enter task title...">
+            <textarea id="task-description-input" placeholder="Enter detailed task description..."></textarea>
+            <!-- ADDED: Deadline input -->
+            <label for="task-deadline-input" style="margin-top: 10px; display: block;">Submission Deadline:</label>
+            <input type="datetime-local" id="task-deadline-input">
+            <button onclick="assignTask()">Assign Task</button>
+            <p id="assign-msg" style="min-height:20px; font-weight:bold;"></p>
+        </div>
+    </div>
+</div>
+
+<!-- Teacher Login Modal -->
+<div id="teacherLoginModal" class="modal-overlay">
+  <div class="modal-content">
+    <button class="close-btn" onclick="closeTeacherModal()">×</button>
+    <h2>Teacher Access</h2>
+    <p>Please enter your credentials to view all submissions.</p>
+    <div class="modal-form">
+      <input type="email" id="teacherEmail" placeholder="Teacher Email" />
+      <input type="password" id="teacherPassword" placeholder="Password" />
+      <p id="teacherError" class="modal-error"></p>
+      <button onclick="handleTeacherLogin()">Login</button>
+    </div>
+  </div>
+</div>
+
+<!-- Ranking Modal -->
+<div id="rank-modal" class="modal">
+  <div class="modal-content">
+    <span class="close-btn" id="close-rank-modal">×</span>
+    <h3>Submission Rankings</h3>
+    <ul id="ranking-list">
+    </ul>
+  </div>
+</div>
+
+<!-- START: Footer -->
+<footer class="footer">
+  <p>© 2025 SUBMITRON. All Rights Reserved.</p>
+</footer>
+<!-- END: Footer -->
+
+<!-- JavaScript -->
+<script>
+  const { Client, Account, Storage, Databases, ID, Query, Permission, Role } = Appwrite;
+
+  const client = new Client()
+    .setEndpoint("https://cloud.appwrite.io/v1")
+    .setProject("6880958d002993e579b3");
+
+  const account = new Account(client);
+  const storage = new Storage(client);
+  const databases = new Databases(client);
+
+  const BUCKET_ID = "688096760038ed926d87";
+  const DATABASE_ID = '68873d6e00198c3e8d87';
+  const TASKS_COLLECTION_ID = '688b3aa2003d6da27d6c';
+  const SUBMISSIONS_COLLECTION_ID = '688b7c6a00249788f9d9';
+
+  let currentUser = null;
+  let isLoginMode = true;
+  let voiceHasPlayed = false;
+
+  function playWelcomeVoice() {
+    if ('speechSynthesis' in window && !voiceHasPlayed) {
+      const message = new SpeechSynthesisUtterance("welcome... to... submitron");
+      message.pitch = 0.2;
+      message.rate = 0.7;
+      message.volume = 1;
+      setTimeout(() => {
+          window.speechSynthesis.speak(message);
+          voiceHasPlayed = true;
+      }, 500);
+    }
+  }
+
+  function enterApp() {
+    document.getElementById("landing").style.display = "none";
+    document.getElementById("about").style.display = "none";
+    document.getElementById("contact").style.display = "none";
+    document.getElementById("authSection").style.display = "flex";
+  }
+
+  async function handleAuth() {
+    const email = document.getElementById("email").value.trim();
+    const password = document.getElementById("password").value.trim();
+    clearAuthErrors();
+    if (!email || !password) {
+      showAuthError("Please enter both email and password.");
+      return;
+    }
+    try {
+      await account.deleteSession('current').catch(() => {});
+      if (isLoginMode) {
+        await account.createEmailSession(email, password);
+      } else {
+        await account.create(ID.unique(), email, password);
+        await account.createEmailSession(email, password);
+      }
+      const user = await account.get();
+      currentUser = user;
+      document.getElementById("userName").textContent = "Hello, " + (user.name || user.email.split('@')[0]);
+      setupRankingModal();
+      if (currentUser.isTeacher) {
+          await setupTeacherDashboard();
+      } else {
+          await setupStudentDashboard();
+      }
+      document.getElementById("authSection").style.display = "none";
+      document.getElementById("appSection").style.display = "flex";
+
+    } catch (err) {
+      showAuthError((isLoginMode ? "Login" : "Signup") + " failed: " + err.message);
+    }
+  }
+
+  function toggleAuthMode() {
+    isLoginMode = !isLoginMode;
+    document.getElementById("authTitle").textContent = isLoginMode ? "Login" : "Sign Up";
+    document.getElementById("authActionBtn").textContent = isLoginMode ? "Login" : "Sign Up";
+    document.getElementById("togglePrompt").textContent = isLoginMode ? "Don't have an account?" : "Already have an account?";
+    document.querySelector("#togglePrompt + a").textContent = isLoginMode ? "Sign up" : "Login";
+    clearAuthErrors();
+  }
+
+  function showAuthError(msg) {
+    document.getElementById("authError").textContent = msg;
+  }
+
+  function clearAuthErrors() {
+    document.getElementById("authError").textContent = "";
+  }
+
+  async function loadApp() {
+    const splashScreen = document.getElementById('splashScreen');
+    try {
+        const user = await account.get();
+        currentUser = user;
+        document.getElementById("userName").textContent = "Hello, " + (user.name || user.email.split('@')[0]);
+        setupRankingModal();
+        
+        if (currentUser.isTeacher) {
+            await setupTeacherDashboard(); 
+        } else {
+            await setupStudentDashboard();
+        }
+        document.getElementById("appSection").style.display = "flex";
+    } catch (err) {
+        showLandingPage();
+    } finally {
+        splashScreen.style.opacity = '0';
+        setTimeout(() => {
+            splashScreen.style.display = 'none';
+        }, 1000); 
+    }
+  }
+
+  async function logout() {
+    try {
+      await account.deleteSession("current");
+    } catch (err) {
+      console.error("Session deletion failed:", err);
+    }
+    currentUser = null;
+    showLandingPage();
+    document.getElementById("appSection").style.display = "none";
+    document.getElementById("landing").style.display = "flex";
+    document.getElementById("about").style.display = "block";
+    document.getElementById("contact").style.display = "block";
+  }
+
+  function showLandingPage() {
+    document.getElementById("appSection").style.display = "none";
+    document.getElementById("authSection").style.display = "none";
+    document.getElementById("teacherLoginModal").style.display = "none";
+    document.getElementById("landing").style.display = "flex";
+    document.getElementById("about").style.display = "block";
+    document.getElementById("contact").style.display = "block";
+    currentUser = null;
+    initializeCarousel();
+    playWelcomeVoice();
+  }
+
+  function teacherPrompt() {
+    document.getElementById('teacherError').textContent = '';
+    document.getElementById('teacherLoginModal').style.display = 'flex';
+  }
+
+  function closeTeacherModal() {
+    document.getElementById('teacherLoginModal').style.display = 'none';
+  }
+
+  async function handleTeacherLogin() {
+    const email = document.getElementById('teacherEmail').value;
+    const password = document.getElementById('teacherPassword').value;
+    const errorP = document.getElementById('teacherError');
+
+    if (!email || !password) {
+      errorP.textContent = "Email and password cannot be empty.";
+      return;
+    }
+
+    if (password === "auth123") {
+        try {
+            await account.createAnonymousSession();
+            currentUser = { email, isTeacher: true };
+            document.getElementById("userName").textContent = "Teacher Dashboard";
+            document.getElementById("landing").style.display = "none";
+            document.getElementById("about").style.display = "none";
+            document.getElementById("contact").style.display = "none";
+            document.getElementById("authSection").style.display = "none";
+            document.getElementById("appSection").style.display = "flex";
+            setupRankingModal();
+            await setupTeacherDashboard();
+            closeTeacherModal();
+        } catch (e) {
+            errorP.textContent = `Login failed: ${e.message}`;
+        }
+    } else {
+      errorP.textContent = "Incorrect password. Please try again.";
+    }
+  }
+
+  async function setupTeacherDashboard() {
+      document.getElementById("teacher-controls-area").style.display = "block";
+      document.getElementById("student-task-area").style.display = "none";
+      document.getElementById("search-container").style.display = "flex";
+      document.getElementById("submission-header").textContent = "All Submissions";
+      await loadTeacherSubmissions();
+  }
+
+  async function setupStudentDashboard() {
+      document.getElementById("teacher-controls-area").style.display = "none";
+      document.getElementById("student-task-area").style.display = "block";
+      document.getElementById("search-container").style.display = "flex";
+      document.getElementById("submission-header").textContent = "Your Submission History";
+      document.getElementById("gallery").innerHTML = "";
+      await loadStudentDashboard();
+  }
+
+  function openAssignTaskModal() {
+    document.getElementById('assignTaskModal').style.display = 'flex';
+  }
+
+  function closeAssignTaskModal() {
+    document.getElementById('assignTaskModal').style.display = 'none';
+  }
+
+  async function assignTask() {
+      const title = document.getElementById('task-title-input').value.trim();
+      const description = document.getElementById('task-description-input').value.trim();
+      const localDeadlineValue = document.getElementById('task-deadline-input').value;
+      const msgEl = document.getElementById('assign-msg');
+
+      if (!title || !description || !localDeadlineValue) {
+          msgEl.textContent = "Please fill out title, description, and deadline.";
+          msgEl.style.color = "red";
+          return;
+      }
+      
+      const deadline = new Date(localDeadlineValue).toISOString();
+
+      if (new Date(deadline) <= new Date()) {
+          msgEl.textContent = "Deadline must be in the future.";
+          msgEl.style.color = "red";
+          return;
+      }
+
+      try {
+          await databases.createDocument(DATABASE_ID, TASKS_COLLECTION_ID, ID.unique(), { title, description, deadline });
+          
+          msgEl.textContent = "Task assigned successfully!";
+          msgEl.style.color = "green";
+          document.getElementById('task-title-input').value = '';
+          document.getElementById('task-description-input').value = '';
+          document.getElementById('task-deadline-input').value = '';
+          
+          setTimeout(async () => {
+            msgEl.textContent = '';
+            closeAssignTaskModal();
+            await loadTeacherSubmissions();
+          }, 1500);
+      } catch (e) {
+          msgEl.textContent = "Error: " + e.message;
+          msgEl.style.color = "red";
+      }
+  }
+
+  async function loadStudentDashboard() {
+    const latestTaskArea = document.getElementById('student-task-area');
+    const historyContainer = document.getElementById('gallery');
+    
+    latestTaskArea.innerHTML = '<h3>Latest Task</h3><p>Loading...</p>';
+    historyContainer.innerHTML = '';
+
+    try {
+        const latestTaskResponse = await databases.listDocuments(DATABASE_ID, TASKS_COLLECTION_ID, [Query.orderDesc('$createdAt'), Query.limit(1)]);
+        
+        if (latestTaskResponse.documents.length > 0) {
+            const latestTask = latestTaskResponse.documents[0];
+            const deadline = new Date(latestTask.deadline); 
+            const now = new Date(); 
+
+            const deadlineString = deadline.toLocaleString();
+            let deadlineHTML = `<p><strong>Deadline:</strong> ${deadlineString}</p>`;
+
+            const submissionCheck = await databases.listDocuments(DATABASE_ID, SUBMISSIONS_COLLECTION_ID, [
+                Query.equal('taskId', latestTask.$id),
+                Query.equal('studentId', currentUser.$id)
+            ]);
+
+            if (submissionCheck.documents.length > 0) {
+                latestTaskArea.innerHTML = `
+                    <h3>${latestTask.title}</h3>
+                    <p>${latestTask.description}</p>
+                    ${deadlineHTML}
+                    <p style="color:green; font-weight:bold;">You have already submitted for this task. See your history below.</p>
+                `;
+            } else if (now > deadline) {
+                 latestTaskArea.innerHTML = `
+                    <h3>${latestTask.title}</h3>
+                    <p>${latestTask.description}</p>
+                    ${deadlineHTML}
+                    <p style="color:red; font-weight:bold;">The submission deadline for this task has passed.</p>
+                `;
+            } else {
+                const escapedTitle = latestTask.title.replace(/'/g, "\\'");
+                const escapedDescription = latestTask.description.replace(/'/g, "\\'");
+                latestTaskArea.innerHTML = `
+                    <h3>${latestTask.title}</h3>
+                    <p>${latestTask.description}</p>
+                    ${deadlineHTML}
+                    <hr>
+                    <input type="file" id="upload-file-${latestTask.$id}" style="width:100%;">
+                    <button class="upload-label" style="width:100%; margin-top:10px;" onclick="uploadSubmission('${latestTask.$id}', '${escapedTitle}', '${escapedDescription}')">Upload</button>
+                    <p id="upload-msg-${latestTask.$id}" style="min-height:20px;"></p>
+                `;
+            }
+        } else {
+            latestTaskArea.innerHTML = '<h3>Latest Task</h3><p>No tasks assigned yet.</p>';
+        }
+
+        const [allTasksResponse, historyResponse] = await Promise.all([
+            databases.listDocuments(DATABASE_ID, TASKS_COLLECTION_ID, [Query.orderDesc('$createdAt'), Query.limit(100)]),
+            databases.listDocuments(DATABASE_ID, SUBMISSIONS_COLLECTION_ID, [
+                Query.equal('studentId', currentUser.$id)
+            ])
+        ]);
+
+        const submissionsByTask = historyResponse.documents.reduce((acc, submission) => {
+            acc[submission.taskId] = submission;
+            return acc;
+        }, {});
+        
+        historyContainer.innerHTML = '';
+        historyContainer.style.display = 'block'; 
+        historyContainer.style.gridTemplateColumns = 'none';
+
+        if (historyResponse.documents.length === 0) {
+            document.getElementById('search-container').style.display = 'none';
+        } else {
+            document.getElementById('search-container').style.display = 'flex';
+        }
+        
+        allTasksResponse.documents.forEach(task => {
+            const submission = submissionsByTask[task.$id];
+            if (submission) {
+                const taskGroup = document.createElement('div');
+                taskGroup.className = 'task-group';
+                taskGroup.setAttribute('data-title-group', task.title.toLowerCase());
+
+                const fileUrl = storage.getFileView(BUCKET_ID, submission.fileId);
+                const rankHTML = submission.rank ? `<p><strong>Your Rank:</strong> #${submission.rank}</p>` : '<p>No rank assigned.</p>';
+                const remarkHTML = submission.remark 
+                    ? `<div class="remark-display"><strong>Teacher's Remark:</strong> ${submission.remark}</div>` 
+                    : '';
+                const deadlineHistoryHTML = task.deadline ? `<p><strong>Task Deadline:</strong> ${new Date(task.deadline).toLocaleString()}</p>` : '';
+
+                const cardHTML = `
+                    <div class="submission-card">
+                        <h4>${submission.taskTitle}</h4>
+                        <p><strong>File:</strong> ${submission.fileName}</p>
+                        ${rankHTML}
+                        ${deadlineHistoryHTML}
+                        <p><small>Submitted: ${new Date(submission.$createdAt).toLocaleString()}</small></p>
+                        ${remarkHTML} 
+                        <div style="display: flex; gap: 10px; margin-top: auto;">
+                            <a href="${fileUrl}" target="_blank" class="download-btn">View</a>
+                            <button onclick="showRanksForTask('${submission.taskId}')" class="secondary-btn">See Ranks</button>
+                            <button class="delete-btn" onclick="deleteSubmission('${submission.$id}', '${submission.fileId}')">Delete</button>
+                        </div>
+                    </div>
+                `;
+                
+                taskGroup.innerHTML = `
+                    <h3>${task.title}</h3>
+                    <div>${cardHTML}</div>
+                `;
+                historyContainer.appendChild(taskGroup);
+            }
+        });
+
+    } catch (e) {
+        latestTaskArea.innerHTML = `<p style="color:red;">Error loading dashboard: ${e.message}</p>`;
+        historyContainer.innerHTML = '';
+    }
+}
+
+  async function uploadSubmission(taskId, taskTitle, taskDescription) {
+    const fileInput = document.getElementById(`upload-file-${taskId}`);
+    const file = fileInput.files[0];
+    const msg = document.getElementById(`upload-msg-${taskId}`);
+
+    if(!file) {
+        msg.textContent = "Please select a file.";
+        return;
+    }
+
+    msg.textContent = "Uploading...";
+    try {
+        const task = await databases.getDocument(DATABASE_ID, TASKS_COLLECTION_ID, taskId);
+        
+        if (task.deadline && new Date(task.deadline) < new Date()) {
+            msg.textContent = "Upload failed: The deadline has passed.";
+            msg.style.color = "red";
+            setTimeout(loadStudentDashboard, 2000);
+            return;
+        }
+
+        const existingSubmissions = await databases.listDocuments(
+            DATABASE_ID,
+            SUBMISSIONS_COLLECTION_ID,
+            [Query.equal('taskId', taskId)]
+        );
+        const rank = existingSubmissions.total + 1;
+
+        const fileResponse = await storage.createFile(BUCKET_ID, ID.unique(), file);
+        await databases.createDocument(DATABASE_ID, SUBMISSIONS_COLLECTION_ID, ID.unique(), {
+            taskId, taskTitle, taskDescription,
+            studentId: currentUser.$id,
+            studentEmail: currentUser.email,
+            fileId: fileResponse.$id,
+            fileName: file.name,
+            rank: rank,
+            remark: ""
+        });
+        await loadStudentDashboard();
+    } catch(e) {
+        msg.textContent = "Upload failed: " + e.message;
+    }
+  }
+
+  async function deleteSubmission(docId, fileId) {
+    if(!confirm("Are you sure you want to delete this submission?")) return;
+    try {
+        await databases.deleteDocument(DATABASE_ID, SUBMISSIONS_COLLECTION_ID, docId);
+        await storage.deleteFile(BUCKET_ID, fileId);
+        await loadStudentDashboard();
+    } catch (e) {
+        alert("Error deleting submission: " + e.message);
+    }
+  }
+
+  async function loadTeacherSubmissions() {
+    const container = document.getElementById('gallery');
+    container.innerHTML = '<p>Loading submissions...</p>';
+    container.style.display = 'block'; 
+    container.style.gridTemplateColumns = 'none';
+
+    try {
+        const [taskResponse, submissionResponse] = await Promise.all([
+            databases.listDocuments(DATABASE_ID, TASKS_COLLECTION_ID, [Query.orderDesc('$createdAt')]),
+            databases.listDocuments(DATABASE_ID, SUBMISSIONS_COLLECTION_ID, [Query.limit(5000)])
+        ]);
+
+        const submissionsByTask = submissionResponse.documents.reduce((acc, submission) => {
+            if (!acc[submission.taskId]) acc[submission.taskId] = [];
+            acc[submission.taskId].push(submission);
+            return acc;
+        }, {});
+
+        container.innerHTML = '';
+        if (taskResponse.documents.length === 0) {
+            container.innerHTML = '<p>No tasks assigned yet.</p>';
+            return;
+        }
+
+        taskResponse.documents.forEach(task => {
+            const taskGroup = document.createElement('div');
+            taskGroup.className = 'task-group';
+            taskGroup.setAttribute('data-title-group', task.title.toLowerCase());
+
+            const deadline = task.deadline ? new Date(task.deadline) : null;
+            let deadlineHTML = '';
+            if (deadline) {
+                const isPast = deadline < new Date();
+                deadlineHTML = `
+                  <p style="font-size: 0.95rem; color: ${isPast ? '#e53e3e' : '#333'};">
+                      <strong>Deadline:</strong> ${deadline.toLocaleString()} ${isPast ? '(Passed)' : ''}
+                  </p>`;
+            }
+
+            const submissionsForThisTask = submissionsByTask[task.$id] || [];
+            submissionsForThisTask.sort((a, b) => (a.rank || Infinity) - (b.rank || Infinity));
+
+            let submissionCardsHTML = submissionsForThisTask.map(doc => {
+                const fileUrl = storage.getFileView(BUCKET_ID, doc.fileId);
+                const rankBadgeHTML = doc.rank ? `<div class="rank-badge">#${doc.rank}</div>` : '';
+                const submissionDate = new Date(doc.$createdAt).toLocaleString();
+                const remarkSectionHTML = `
+                    <div class="remark-section">
+                        <label for="remark-input-${doc.$id}"><strong>Remark:</strong></label>
+                        <textarea id="remark-input-${doc.$id}" placeholder="Add a remark for the student...">${doc.remark || ''}</textarea>
+                        <button onclick="addOrUpdateRemark('${doc.$id}')">Save Remark</button>
+                        <p id="remark-msg-${doc.$id}" style="font-size: 0.8em; min-height: 1em;"></p>
+                    </div>
+                `;
+
+                return `
+                    <div class="submission-card" data-email="${doc.studentEmail.toLowerCase()}" data-title="${doc.taskTitle.toLowerCase()}">
+                        ${rankBadgeHTML}
+                        <h4>${doc.fileName}</h4>
+                        <p><strong>Student:</strong> ${doc.studentEmail}</p>
+                        <p><small>Submitted: ${submissionDate}</small></p>
+                        <a href="${fileUrl}" target="_blank" class="download-btn">View Submission</a>
+                        ${remarkSectionHTML}
+                    </div>
+                `;
+            }).join('');
+
+            if (submissionsForThisTask.length === 0) {
+                submissionCardsHTML = '<p>No submissions for this task yet.</p>';
+            }
+            
+            taskGroup.innerHTML = `
+                <h3>${task.title}</h3>
+                ${deadlineHTML}
+                <div class="gallery">
+                    ${submissionCardsHTML}
+                </div>
+            `;
+            container.appendChild(taskGroup);
+        });
+
+    } catch (e) {
+        container.innerHTML = `<p style="color:red;">Error loading submissions: ${e.message}</p>`;
+    }
+  }
+
+  async function addOrUpdateRemark(submissionId) {
+      const remarkInput = document.getElementById(`remark-input-${submissionId}`);
+      const remarkText = remarkInput.value.trim();
+      const msgEl = document.getElementById(`remark-msg-${submissionId}`);
+
+      if (!remarkText) {
+          msgEl.textContent = "Remark cannot be empty.";
+          msgEl.style.color = "red";
+          return;
+      }
+
+      msgEl.textContent = "Saving...";
+      msgEl.style.color = "gray";
+
+      try {
+          await databases.updateDocument(
+              DATABASE_ID,
+              SUBMISSIONS_COLLECTION_ID,
+              submissionId,
+              { remark: remarkText }
+          );
+
+          msgEl.textContent = "Remark saved successfully!";
+          msgEl.style.color = "green";
+      } catch(e) {
+          msgEl.textContent = `Error: ${e.message}`;
+          msgEl.style.color = "red";
+      }
+  }
+
+  document.getElementById("searchInput").addEventListener("input", function () {
+    const keyword = this.value.toLowerCase();
+    const isTeacher = currentUser && currentUser.isTeacher;
+
+    if (isTeacher) {
+        document.querySelectorAll(".task-group").forEach(group => {
+            let groupHasVisibleCard = false;
+            group.querySelectorAll(".submission-card").forEach(card => {
+                const email = card.getAttribute('data-email') || '';
+                const title = card.getAttribute('data-title') || '';
+                const cardIsVisible = email.includes(keyword) || title.includes(keyword);
+                card.style.display = cardIsVisible ? 'flex' : 'none';
+                if (cardIsVisible) groupHasVisibleCard = true;
+            });
+            group.style.display = groupHasVisibleCard ? 'block' : 'none';
+        });
+    } else {
+        document.querySelectorAll(".task-group").forEach(group => {
+            const groupTitle = group.getAttribute('data-title-group') || '';
+            const isVisible = groupTitle.includes(keyword);
+            group.style.display = isVisible ? 'block' : 'none';
+        });
+    }
+  });
+
+  function setupRankingModal() {
+    const rankModal = document.getElementById('rank-modal');
+    const closeBtn = document.getElementById('close-rank-modal');
+    closeBtn.onclick = () => rankModal.style.display = "none";
+    window.onclick = (event) => {
+        if (event.target == rankModal) {
+            rankModal.style.display = "none";
+        }
+    }
+  }
+
+  async function showRanksForTask(taskId) {
+    const modal = document.getElementById('rank-modal');
+    const list = document.getElementById('ranking-list');
+
+    modal.style.display = 'flex';
+    list.innerHTML = '<li>Loading ranks...</li>';
+
+    try {
+        const response = await databases.listDocuments(
+            DATABASE_ID,
+            SUBMISSIONS_COLLECTION_ID,
+            [
+                Query.equal('taskId', taskId),
+                Query.orderAsc('rank')
+            ]
+        );
+
+        if (response.documents.length === 0) {
+            list.innerHTML = '<li>No submissions found for this task.</li>';
+            return;
+        }
+
+        const listItemsHTML = response.documents.map(doc => `
+            <li>
+                <span class="rank">#${doc.rank}</span>
+                <span class="email">${doc.studentEmail}</span>
+            </li>
+        `).join('');
+        list.innerHTML = listItemsHTML;
+    } catch (e) {
+        list.innerHTML = '<li>Error loading ranks. Please try again.</li>';
+        console.error("Error fetching ranks:", e);
+    }
+}
+
+  function initializeCarousel() {
+    const wrapper = document.getElementById('carouselWrapper');
+    const nextBtn = document.getElementById('nextBtn');
+    const prevBtn = document.getElementById('prevBtn');
+    const carouselContainer = document.querySelector('.carousel-container');
+
+    if (!wrapper || !nextBtn || !prevBtn || !carouselContainer) return;
+
+    let autoScrollInterval;
+
+    const startAutoScroll = () => {
+      autoScrollInterval = setInterval(() => {
+        const cardWidth = wrapper.querySelector('.carousel-card').offsetWidth;
+        const scrollAmount = cardWidth + 20;
+
+        if (wrapper.scrollLeft + wrapper.clientWidth >= wrapper.scrollWidth - 1) {
+            wrapper.scrollLeft = 0;
+        } else {
+            wrapper.scrollLeft += scrollAmount;
+        }
+      }, 3000);
+    };
+
+    const stopAutoScroll = () => {
+      clearInterval(autoScrollInterval);
+    };
+
+    nextBtn.addEventListener('click', () => {
+      const cardWidth = wrapper.querySelector('.carousel-card').offsetWidth;
+      wrapper.scrollLeft += cardWidth + 20;
+    });
+
+    prevBtn.addEventListener('click', () => {
+      const cardWidth = wrapper.querySelector('.carousel-card').offsetWidth;
+      wrapper.scrollLeft -= cardWidth + 20;
+    });
+
+    carouselContainer.addEventListener('mouseenter', stopAutoScroll);
+    carouselContainer.addEventListener('mouseleave', startAutoScroll);
+
+    startAutoScroll();
+  }
+
+   window.addEventListener('load', () => {
+    setTimeout(() => {
+        loadApp();
+    }, 10000);
+  });
+
+</script>
+</body>
+</html>
